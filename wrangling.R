@@ -23,21 +23,24 @@ patients <-
     disorder,
     levels = c('pd', 'other_mh'),
     labels = c('Personality disorder', 'Other mental health disorder')
-  ))
-
+  )) %>% 
+  mutate(category_str=as.character(category)) %>% 
+  mutate(category_str_order=factor(category_str,levels=c(1:12),
+                                   label=cat_labels)) %>% 
+  select(-category_str)
 
 # Make column graph -------------------------------------------------------
 
 
 (
-  p1 <- ggplot(data = patients, aes(x = (category), y = patient_pc)) +
+  p1 <- ggplot(data = patients, aes(x = (category), y = patient_pc, fill=disorder)) +
     geom_col() +
     theme_bw() + labs(x = '', y = '') +
     scale_x_continuous(#breaks = c(0:12),
       #limits = c(0, 12),
       expand = expansion(mult = c(0, 0))) +
     scale_y_continuous(expand = c(0, 0), limits=c(0,70)) +
-    theme(
+    theme(legend.position='none',
       axis.title.x = element_blank(),
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
@@ -52,8 +55,11 @@ patients <-
 
 # Make data frame for table -----------------------------------------------
 (
-  df <- patients %>% select(category, disorder,patients, patient_pc) %>%
-    mutate(numbers = category) %>%
+  df <- patients %>% 
+    select(category,category_str_order, disorder,patients, patient_pc) %>%
+    mutate(numbers = category_str_order) %>%
+    mutate(patients=prettyNum(patients, big.mark = ",", scientific = FALSE)) %>% 
+    mutate(across(where(is.numeric), as.character)) %>% 
     pivot_longer(
       c(numbers, patients, patient_pc),
       names_to = "layer",
@@ -66,16 +72,15 @@ patients <-
 
 p2 <- df %>%
   mutate(label_format=prettyNum(label, big.mark = ",", scientific = FALSE)) %>% 
-  ggplot(aes(x = category, y = factor(
+  ggplot(aes(x = category_str_order, y = factor(
     layer,
     c("patient_pc", "patients", "numbers"),
     label = c('Patients %', 'Patients', "Attendances")
   ))) +
-  #ggplot(aes(x=category, y=0)) +
   geom_tile(fill = NA,
             alpha = .4,
             color = NA) +
-  geom_text(aes(label = label_format), size=6) +
+  geom_text(aes(label = label), size=6) +
   scale_x_discrete(expand = expansion(mult = c(0, 0))) +
   labs(y = "", x = NULL) +
   theme_minimal() +
