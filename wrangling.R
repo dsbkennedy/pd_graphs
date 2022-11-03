@@ -3,7 +3,6 @@
 require(pacman)
 pacman::p_load(tidyverse, janitor, here, patchwork)
 
-
 # Load data ---------------------------------------------------------------
 raw_data <-
   read.csv(list.files(
@@ -13,16 +12,18 @@ raw_data <-
     full.names = T
   ))
 
-
 # Wrangle data ------------------------------------------------------------
-
 
 patients <-
   raw_data %>% select(1:4) %>% mutate(across(!category, as.character)) %>%
   pivot_longer(-c(1:2)) %>%
   mutate(value = as.numeric(str_replace_all(value, ',', ''))) %>%
-  pivot_wider(names_from = name, values_from = value) %>% 
-  mutate(disorder=factor(disorder, levels=c('pd', 'other_mh'), labels=c('Personality disorder', 'Other mental health disorder')))
+  pivot_wider(names_from = name, values_from = value) %>%
+  mutate(disorder = factor(
+    disorder,
+    levels = c('pd', 'other_mh'),
+    labels = c('Personality disorder', 'Other mental health disorder')
+  ))
 
 
 # Make column graph -------------------------------------------------------
@@ -35,10 +36,15 @@ patients <-
     scale_x_continuous(#breaks = c(0:12),
       #limits = c(0, 12),
       expand = expansion(mult = c(0, 0))) +
+    scale_y_continuous(expand = c(0, 0), limits=c(0,70)) +
     theme(
       axis.title.x = element_blank(),
       axis.text.x = element_blank(),
-      axis.ticks.x = element_blank()
+      axis.ticks.x = element_blank(),
+      panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+      panel.background = element_blank(), axis.line = element_line(colour = "black"),
+      text = element_text(size = 20), 
+      panel.spacing = unit(2, "lines")
     ) +
     facet_wrap(~disorder)
 )
@@ -69,7 +75,7 @@ p2 <- df %>%
   geom_tile(fill = NA,
             alpha = .4,
             color = NA) +
-  geom_text(aes(label = label_format)) +
+  geom_text(aes(label = label_format), size=6) +
   scale_x_discrete(expand = expansion(mult = c(0, 0))) +
   labs(y = "", x = NULL) +
   theme_minimal() +
@@ -79,7 +85,8 @@ p2 <- df %>%
     axis.text.x = element_blank(),
     panel.grid = element_blank(),
     strip.text = element_blank(),
-    panel.spacing.x = unit(0, "mm")
+    panel.spacing = unit(2, "lines"),
+    text = element_text(size = 20)
   ) +
   facet_wrap(~ disorder)
 
@@ -87,7 +94,4 @@ p2 <- df %>%
 # Combine plots -----------------------------------------------------------
 
 p1 / p2 +  plot_layout(heights = c(8, 1))
-
-
-
 
