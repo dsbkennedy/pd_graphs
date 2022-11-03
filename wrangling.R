@@ -14,6 +14,8 @@ raw_data <-
 
 # Wrangle data ------------------------------------------------------------
 
+cat_labels <- c(as.character(c(1:10)), '11-19', '20+')
+
 patients <-
   raw_data %>% select(1:4) %>% mutate(across(!category, as.character)) %>%
   pivot_longer(-c(1:2)) %>%
